@@ -261,7 +261,7 @@ async function deleteFromJobber(name, email) {
           'Authorization':
             `Bearer ${JOBBER_ACCESS_TOKEN}`,
           'X-JOBBER-GRAPHQL-VERSION':
-            '2024-01-15',
+            '2023-11-15',
         },
         body: JSON.stringify({
           query: `
