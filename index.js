@@ -55,14 +55,11 @@ app.get('/jobber/callback', async (req, res) => {
       }
     );
 
-    const data = await response.json();
+    const text = await response.text();
 
-    console.log(
-      'JOBBER TOKENS:',
-      JSON.stringify(data, null, 2)
-    );
-
-    res.json(data);
+    console.log('JOBBER RAW RESPONSE:', text);
+    
+    res.send(text);
 
   } catch (error) {
 
