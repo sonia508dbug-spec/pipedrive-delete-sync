@@ -3,7 +3,7 @@ async function deleteFromGoogleContacts(email) {
   try {
 
     console.log(`Searching Google Contacts for: ${email}`);
-    console.log(process.env.GOOGLE_CREDENTIALS);
+
     const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
 
     const { client_id, client_secret, redirect_uris } = credentials.web;
@@ -23,7 +23,6 @@ async function deleteFromGoogleContacts(email) {
       auth: oAuth2Client
     });
 
-    // Search contact
     const searchResult = await service.people.searchContacts({
       query: email,
       readMask: 'names,emailAddresses'
@@ -33,7 +32,6 @@ async function deleteFromGoogleContacts(email) {
 
     console.log(`Found ${results.length} Google contacts`);
 
-    // Delete all matched contacts
     for (const result of results) {
 
       const resourceName = result.person.resourceName;
