@@ -33,7 +33,7 @@ app.post('/webhook', async (req, res) => {
     console.log('Entity:', entity);
 
     // Check deleted person event
-    if (action === 'deleted' && entity === 'person') {
+    if (action === 'delete' && entity === 'person') {
 
       const person = data.previous || {};
 
