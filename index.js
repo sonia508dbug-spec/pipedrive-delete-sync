@@ -1,30 +1,25 @@
 const express = require('express');
+const { google } = require('googleapis');
+
 const app = express();
 
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// ===================================================
-// GOOGLE API
-// ===================================================
-const { google } = require('googleapis');
-
-// ===================================================
-// HOME ROUTE
-// ===================================================
+// ======================================
+// HOME
+// ======================================
 app.get('/', (req, res) => {
-
   res.json({
-    status: 'ok',
-    message: 'Webhook is live!'
+    success: true,
+    message: 'Webhook server is live 🚀'
   });
-
 });
 
-// ===================================================
+// ======================================
 // WEBHOOK
-// ===================================================
+// ======================================
 app.post('/webhook', async (req, res) => {
 
   try {
@@ -36,25 +31,20 @@ app.post('/webhook', async (req, res) => {
       JSON.stringify(data, null, 2)
     );
 
-    // Get action + entity
     const action = data.meta?.action;
     const entity = data.meta?.entity;
 
     console.log('Action:', action);
     console.log('Entity:', entity);
 
-    // ===================================================
-    // DELETE PERSON
-    // ===================================================
+    // ONLY PERSON DELETE
     if (action === 'delete' && entity === 'person') {
 
       const person = data.previous || {};
 
-      // Name
-      const name =
+      let name =
         `${person.first_name || ''} ${person.last_name || ''}`.trim();
 
-      // Email
       let email = '';
 
       if (
@@ -68,12 +58,12 @@ app.post('/webhook', async (req, res) => {
         `Deleted Contact -> Name: ${name} | Email: ${email}`
       );
 
-      // Delete from Google Contacts
+      // DELETE FROM GOOGLE
       if (email) {
         await deleteFromGoogleContacts(email);
       }
 
-      // Delete from Jobber
+      // DELETE FROM JOBBER
       if (name || email) {
         await deleteFromJobber(name, email);
       }
@@ -87,7 +77,7 @@ app.post('/webhook', async (req, res) => {
 
     console.error(
       'Webhook Error:',
-      error
+      error.message
     );
 
     return res.status(500).json({
@@ -97,9 +87,9 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
-// ===================================================
-// DELETE FROM GOOGLE CONTACTS
-// ===================================================
+// ======================================
+// GOOGLE CONTACT DELETE
+// ======================================
 async function deleteFromGoogleContacts(email) {
 
   try {
@@ -108,22 +98,18 @@ async function deleteFromGoogleContacts(email) {
       `Searching Google Contacts for: ${email}`
     );
 
-    console.log(
+    // READ GOOGLE JSON
+    const credentials = JSON.parse(
       process.env.GOOGLE_CREDENTIALS
     );
 
-    // Parse credentials
-    const credentials =
-      JSON.parse(process.env.GOOGLE_CREDENTIALS);
-
-    // Get OAuth details
     const {
       client_id,
       client_secret,
       redirect_uris
     } = credentials.web;
 
-    // OAuth client
+    // CREATE OAUTH CLIENT
     const oAuth2Client =
       new google.auth.OAuth2(
         client_id,
@@ -131,19 +117,19 @@ async function deleteFromGoogleContacts(email) {
         redirect_uris[0]
       );
 
-    // Set refresh token
+    // SET REFRESH TOKEN
     oAuth2Client.setCredentials({
       refresh_token:
         process.env.GOOGLE_REFRESH_TOKEN
     });
 
-    // Google People API
+    // PEOPLE API
     const service = google.people({
       version: 'v1',
       auth: oAuth2Client
     });
 
-    // Search contact
+    // SEARCH CONTACT
     const searchResult =
       await service.people.searchContacts({
         query: email,
@@ -157,7 +143,7 @@ async function deleteFromGoogleContacts(email) {
       `Found ${results.length} Google contacts`
     );
 
-    // Delete contacts
+    // DELETE CONTACTS
     for (const result of results) {
 
       const resourceName =
@@ -185,9 +171,9 @@ async function deleteFromGoogleContacts(email) {
   }
 }
 
-// ===================================================
-// DELETE FROM JOBBER
-// ===================================================
+// ======================================
+// JOBBER DELETE
+// ======================================
 async function deleteFromJobber(name, email) {
 
   try {
@@ -208,7 +194,7 @@ async function deleteFromJobber(name, email) {
       `Searching Jobber Client for: ${email}`
     );
 
-    // Search client
+    // SEARCH CLIENT
     const searchResponse = await fetch(
       'https://api.getjobber.com/api/graphql',
       {
@@ -245,7 +231,7 @@ async function deleteFromJobber(name, email) {
       `Found ${clients.length} Jobber clients`
     );
 
-    // Delete clients
+    // DELETE CLIENTS
     for (const client of clients) {
 
       console.log(
@@ -293,13 +279,12 @@ async function deleteFromJobber(name, email) {
   }
 }
 
-// ===================================================
+// ======================================
 // SERVER
-// ===================================================
+// ======================================
 app.listen(PORT, () => {
 
   console.log(
     `🚀 Server running on port ${PORT}`
   );
-
 });
