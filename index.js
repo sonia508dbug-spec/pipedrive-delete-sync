@@ -11,10 +11,70 @@ const PORT = process.env.PORT || 3000;
 // HOME
 // ======================================
 app.get('/', (req, res) => {
+
   res.json({
     success: true,
     message: 'Webhook server is live 🚀'
   });
+
+});
+
+// ======================================
+// JOBBER AUTH CALLBACK
+// ======================================
+app.get('/jobber/callback', async (req, res) => {
+
+  try {
+
+    const code = req.query.code;
+
+    console.log('Authorization Code:', code);
+
+    const response = await fetch(
+      'https://api.getjobber.com/api/oauth/token',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+
+          client_id:
+            process.env.JOBBER_CLIENT_ID,
+
+          client_secret:
+            process.env.JOBBER_CLIENT_SECRET,
+
+          grant_type: 'authorization_code',
+
+          code: code,
+
+          redirect_uri:
+            'https://pipedrive-delete-sync.onrender.com/jobber/callback'
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    console.log(
+      'JOBBER TOKENS:',
+      JSON.stringify(data, null, 2)
+    );
+
+    res.json(data);
+
+  } catch (error) {
+
+    console.log(
+      'Jobber Auth Error:',
+      error.message
+    );
+
+    res.status(500).json({
+      error: error.message
+    });
+  }
 });
 
 // ======================================
@@ -178,13 +238,13 @@ async function deleteFromJobber(name, email) {
 
   try {
 
-    const JOBBER_API_KEY =
-      process.env.JOBBER_API_KEY;
+    const JOBBER_ACCESS_TOKEN =
+      process.env.JOBBER_ACCESS_TOKEN;
 
-    if (!JOBBER_API_KEY) {
+    if (!JOBBER_ACCESS_TOKEN) {
 
       console.log(
-        '⚠️ JOBBER_API_KEY not added yet'
+        '⚠️ JOBBER_ACCESS_TOKEN not added yet'
       );
 
       return;
@@ -202,7 +262,7 @@ async function deleteFromJobber(name, email) {
         headers: {
           'Content-Type': 'application/json',
           'Authorization':
-            `Bearer ${JOBBER_API_KEY}`,
+            `Bearer ${JOBBER_ACCESS_TOKEN}`,
           'X-JOBBER-GRAPHQL-VERSION':
             '2024-01-15',
         },
@@ -223,6 +283,11 @@ async function deleteFromJobber(name, email) {
 
     const searchData =
       await searchResponse.json();
+
+    console.log(
+      'Jobber Search Response:',
+      JSON.stringify(searchData, null, 2)
+    );
 
     const clients =
       searchData?.data?.clients?.nodes || [];
@@ -245,7 +310,7 @@ async function deleteFromJobber(name, email) {
           headers: {
             'Content-Type': 'application/json',
             'Authorization':
-              `Bearer ${JOBBER_API_KEY}`,
+              `Bearer ${JOBBER_ACCESS_TOKEN}`,
             'X-JOBBER-GRAPHQL-VERSION':
               '2024-01-15',
           },
@@ -266,7 +331,7 @@ async function deleteFromJobber(name, email) {
 
       console.log(
         '✅ Deleted Jobber Client:',
-        JSON.stringify(deleteData)
+        JSON.stringify(deleteData, null, 2)
       );
     }
 
@@ -287,4 +352,5 @@ app.listen(PORT, () => {
   console.log(
     `🚀 Server running on port ${PORT}`
   );
+
 });
