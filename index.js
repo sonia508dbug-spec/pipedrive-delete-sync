@@ -3,7 +3,7 @@ async function deleteFromGoogleContacts(email) {
   try {
 
     console.log(`Searching Google Contacts for: ${email}`);
-
+    console.log(process.env.GOOGLE_CREDENTIALS);
     const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
 
     const { client_id, client_secret, redirect_uris } = credentials.web;
