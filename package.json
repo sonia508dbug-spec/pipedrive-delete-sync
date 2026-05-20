@@ -1,0 +1,12 @@
+{
+  "name": "pipedrive-delete-sync",
+  "version": "1.0.0",
+  "description": "PipeDrive Delete Sync Webhook Server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
